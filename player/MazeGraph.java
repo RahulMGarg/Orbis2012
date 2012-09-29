@@ -5,11 +5,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Stack;
 
 import org.python.google.common.collect.Iterables;
 
+import com.google.common.collect.Lists;
 import com.orbischallenge.pacman.api.common.*;
 import com.orbischallenge.pacman.api.java.*;
 import com.sun.jmx.remote.internal.ArrayQueue;
@@ -105,8 +107,7 @@ public class MazeGraph {
 	 */
 	private Point turnCorner(Point cornerTile, Point currDirVector) {
 		for (Point perVector : JUtil.getPerpendiculars(currDirVector)) {
-			Point newTile = JUtil.vectorAdd(cornerTile,
-					perVector);
+			Point newTile = JUtil.vectorAdd(cornerTile, perVector);
 			if (maze.isAccessible(newTile)) {
 				return perVector;
 			}
@@ -235,22 +236,22 @@ public class MazeGraph {
 	}
 
 	public MoveDir getClosestDot(Point p, List<MoveDir> potentialDirs) {
-		Queue<Point> queue = new LinkedList<Point>();
-		for(MoveDir dir: potentialDirs){
+		Queue<List<Point>> queue = new LinkedList<List<Point>>();
+		for (MoveDir dir : potentialDirs) {
 			Point point = JUtil.vectorAdd(p, JUtil.getVector(dir));
-			queue.add(point);
+			queue.add(Lists.newArrayList(point));
 		}
-		List<Point> path = BFSForMazeItem(MazeItem.DOT, new ArrayList<Point>(), queue);
-		if(!path.isEmpty()){
+		List<Point> path = BFSForMazeItem(MazeItem.DOT, queue);
+		if (!path.isEmpty()) {
 			return JUtil.getMoveDir(JUtil.vectorSub(path.get(0), p));
-		}else{
+		} else {
 			throw new RuntimeException();
 		}
 	}
-	
-	public List<Point> BFSForMazeItem(MazeItem item, List<Point> path, Queue<Point> unvistedPoints){
-		if(unvistedPoints.peek()!=null){
-			path.add(unvistedPoints.poll());
+
+	public List<Point> BFSForMazeItem(MazeItem item, Queue<List<Point>> unvistedPaths){
+		while(unvistedPaths.peek()!=null){
+			List<Point> path = unvistedPaths.poll();			
 			Point point = path.get(path.size() - 1);
 			if(maze.getTileItem(point).equals(item)){
 				return path;
@@ -258,16 +259,15 @@ public class MazeGraph {
 			List<Point> points = maze.getAccessibleNeighbours(point);
 			for (Point poi : points) {
 				if(!path.contains(poi)){
-					unvistedPoints.add(poi);
+					List<Point> newPath = Lists.newArrayList(path);
+					newPath.add(poi);
+					unvistedPaths.add(newPath);
 				}
 			}
-			return BFSForMazeItem(item, path, unvistedPoints);
-		}else {
-			return path;
 		}
+		return new ArrayList<Point>();
 		
 		
 	}
-	
-	
+
 }
