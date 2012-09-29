@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.python.google.common.collect.Iterables;
+
 import com.orbischallenge.pacman.api.common.*;
 import com.orbischallenge.pacman.api.java.*;
 
@@ -213,4 +215,19 @@ public class MazeGraph {
 		}
 		return MoveDirList;
 	}
+
+	public List<Point> getShortestPath(Point ghost, Point you,
+			int thresholdTiles) {
+		List<List<Point>> paths = getPaths(ghost, you, thresholdTiles);
+		int minSize = Integer.MAX_VALUE;
+		List<Point> shortestPath = null;
+		for (List<Point> path : paths) {
+			if (path.size() < minSize) {
+				minSize = path.size();
+				shortestPath = path;
+			}
+		}
+		return shortestPath;
+	}
+	
 }

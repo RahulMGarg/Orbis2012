@@ -1,6 +1,12 @@
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.python.google.common.collect.Lists;
+
+import com.google.common.collect.Iterables;
 import com.orbischallenge.pacman.api.common.*;
 import com.orbischallenge.pacman.api.java.*;
 
@@ -12,7 +18,29 @@ import com.orbischallenge.pacman.api.java.*;
  */
 public class PacPlayer implements Player {
 
+	private static final int THRESHOLD_TILES = 5;
+
 	private int lives = 3;
+
+	private MazeGraph graph;
+
+	enum Modes {
+		EXPLORING, HUNTING, FLEEING
+	}
+
+	private final static double THRESHOLD_PIXELS = THRESHOLD_TILES * 16;
+
+	private Map<GhostName, Integer> distanceToGhost = new HashMap<GhostName, Integer>();
+
+	enum Quadrants {
+		UPPER_LEFT, UPPER_RIGHT, LOWER_RIGHT, LOWER_LEFT
+	}
+
+	// States where touching a ghost is bad
+	private final static List<GhostState> dangerousStates = Lists.newArrayList(
+			GhostState.CHASER, GhostState.SCATTER);
+
+	private Map<MazeItem, Integer> distanceToDots = new HashMap<MazeItem, Integer>();
 
 	/**
 	 * This is method decides Pacman�s moving direction in the next frame (See
@@ -35,25 +63,77 @@ public class PacPlayer implements Player {
 			int score) {
 		MoveDir[] directions = MoveDir.values();
 
+		Modes mode = Modes.EXPLORING;
+		// Get the current tile of Pacman
+		Point pacTile = pac.getTile();
+		List<Ghost> closeGhosts = new ArrayList<Ghost>();
+		for (int i = 0; i < ghosts.length; i++) {
+			if (ghosts[i].distanceToPac(pac) < THRESHOLD_PIXELS
+					&& (dangerousStates.contains(ghosts[i].getState()))) {
+				closeGhosts.add(ghosts[i]);
+			}
+		}
+
+		if (!closeGhosts.isEmpty()) {
+			mode = Modes.FLEEING;
+		}
+
+		MoveDir dir = calculateNext(mode, pac, maze, closeGhosts);
+		// Iterate through the four directions
+
+		return dir;
+	}
+
+	private MoveDir calculateNext(Modes mode, Pac pac, Maze maze,
+			List<Ghost> ghosts) {
+
+		MoveDir direction = null;
+
+		MoveDir[] directions = MoveDir.values();
+
 		// Get the current tile of Pacman
 		Point pacTile = pac.getTile();
 
-		// Iterate through the four directions
-		for (MoveDir dir : directions) {
-
-			// Find Pacman's next tile if it were going on this direction
-			Point nextTile = JUtil.vectorAdd(pacTile, JUtil.getVector(dir));
-
-			// Get the maze item of that tile
-			MazeItem item = maze.getTileItem(nextTile);
-
-			// If the item is a dot or power dot, go to that tile
-			if (item == MazeItem.DOT || item == MazeItem.POWER_DOT) {
-				return dir;
+		switch (mode) {
+		case EXPLORING:
+			if (pac.getPossibleDirs().contains(pac.getDir())) {
+				// TODO: Update to look for dots
+				direction = pac.getDir();
+			} else {
+				direction = choseRandomDir(pac.getPossibleDirs());
 			}
+			break;
+		case FLEEING:
+			List<MoveDir> potentialDirs = pac.getPossibleDirs();
+			List<Point> ghostEndPoints = Lists.newArrayList();
+			for (Ghost ghost : ghosts) {
+				List<Point> path = graph.getShortestPath(ghost.getTile(), pac.getTile(), THRESHOLD_TILES);
+				ghostEndPoints.add(path.get(path.size() - 1));
+			}
+			for (MoveDir potentialDir : pac.getPossibleDirs()) {
+				Point point = JUtil.vectorAdd(pacTile, JUtil.getVector(potentialDir));
+				if(ghostEndPoints.contains(point)){
+					potentialDirs.remove(potentialDir);
+				}
+			}
+			if(potentialDirs.isEmpty()){
+				//TODO: Go away from closest
+				direction = choseRandomDir(pac.getPossibleDirs());
+			}else{
+				direction = choseRandomDir(potentialDirs);
+			}
+			
+			break;
+		case HUNTING:
+			break;
+		default:
+			throw new IllegalStateException();
 		}
-		// If we get here, just keep going on the current direction
-		return pac.getDir();
+		return direction;
+	}
+
+	private MoveDir choseRandomDir(List<MoveDir> potentialDirs) {
+		return potentialDirs.get(0);
 	}
 
 	/**
@@ -72,14 +152,14 @@ public class PacPlayer implements Player {
 	 */
 	public void onLevelStart(Maze maze, Ghost[] ghosts, Pac pac, int score) {
 		System.out.println("Java player start new level!");
-		MazeGraph graph = new MazeGraph(maze);
+		this.graph = new MazeGraph(maze);
 	}
 
 	/**
 	 * This method will be called by the game whenever Pacman receives a new
-	 * life, including the first life. The parameters represent the
-	 * repositioned game objects. This method will always be called before
-	 * calculateDirection and after onLevelStart.
+	 * life, including the first life. The parameters represent the repositioned
+	 * game objects. This method will always be called before calculateDirection
+	 * and after onLevelStart.
 	 * 
 	 * @param maze
 	 *            A Maze object representing the current maze.
