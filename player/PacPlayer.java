@@ -100,7 +100,7 @@ public class PacPlayer implements Player {
 				// TODO: Update to look for dots
 				direction = pac.getDir();
 			} else {
-				direction = choseRandomDir(pac.getPossibleDirs());
+				direction = dirToClosestDot(pac, pac.getPossibleDirs());
 			}
 			break;
 		case FLEEING:
@@ -118,9 +118,9 @@ public class PacPlayer implements Player {
 			}
 			if(potentialDirs.isEmpty()){
 				//TODO: Go away from closest
-				direction = choseRandomDir(pac.getPossibleDirs());
+				direction = dirToClosestDot(pac, pac.getPossibleDirs());
 			}else{
-				direction = choseRandomDir(potentialDirs);
+				direction = dirToClosestDot(pac, potentialDirs);
 			}
 			
 			break;
@@ -132,8 +132,8 @@ public class PacPlayer implements Player {
 		return direction;
 	}
 
-	private MoveDir choseRandomDir(List<MoveDir> potentialDirs) {
-		return potentialDirs.get(0);
+	private MoveDir dirToClosestDot(Pac pac, List<MoveDir> potentialDirs) {
+		return graph.getClosestDot(pac.getTile(), potentialDirs);
 	}
 
 	/**

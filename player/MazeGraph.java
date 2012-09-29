@@ -2,13 +2,17 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Stack;
 
 import org.python.google.common.collect.Iterables;
 
 import com.orbischallenge.pacman.api.common.*;
 import com.orbischallenge.pacman.api.java.*;
+import com.sun.jmx.remote.internal.ArrayQueue;
 
 /**
  * A graph representation of the maze. Important: the methods are not optimized
@@ -229,5 +233,41 @@ public class MazeGraph {
 		}
 		return shortestPath;
 	}
+
+	public MoveDir getClosestDot(Point p, List<MoveDir> potentialDirs) {
+		Queue<Point> queue = new LinkedList<Point>();
+		for(MoveDir dir: potentialDirs){
+			Point point = JUtil.vectorAdd(p, JUtil.getVector(dir));
+			queue.add(point);
+		}
+		List<Point> path = BFSForMazeItem(MazeItem.DOT, new ArrayList<Point>(), queue);
+		if(!path.isEmpty()){
+			return JUtil.getMoveDir(JUtil.vectorSub(path.get(0), p));
+		}else{
+			throw new RuntimeException();
+		}
+	}
+	
+	public List<Point> BFSForMazeItem(MazeItem item, List<Point> path, Queue<Point> unvistedPoints){
+		if(unvistedPoints.peek()!=null){
+			path.add(unvistedPoints.poll());
+			Point point = path.get(path.size() - 1);
+			if(maze.getTileItem(point).equals(item)){
+				return path;
+			}
+			List<Point> points = maze.getAccessibleNeighbours(point);
+			for (Point poi : points) {
+				if(!path.contains(poi)){
+					unvistedPoints.add(poi);
+				}
+			}
+			return BFSForMazeItem(item, path, unvistedPoints);
+		}else {
+			return path;
+		}
+		
+		
+	}
+	
 	
 }
