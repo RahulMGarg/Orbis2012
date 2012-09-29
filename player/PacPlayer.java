@@ -1,12 +1,13 @@
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import org.python.google.common.collect.Lists;
+import java.util.Set;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.orbischallenge.pacman.api.common.*;
 import com.orbischallenge.pacman.api.java.*;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.sym;
@@ -101,16 +102,16 @@ public class PacPlayer implements Player {
 			break;
 		case FLEEING:
 			List<MoveDir> potentialDirs = pac.getPossibleDirs();
-			List<Point> ghostEndPoints = Lists.newArrayList();
+			Set<Point> dangerousPoints = new HashSet<Point>();
 			for (Ghost ghost : ghosts) {
 				List<Point> path = graph.getShortestPath(ghost.getTile(), pac.getTile(), THRESHOLD_TILES);
 				if(!path.isEmpty()){
-					ghostEndPoints.add(path.get(path.size() - 1));
+					dangerousPoints.addAll(path);
 				}
 			}
 			for (MoveDir potentialDir : pac.getPossibleDirs()) {
 				Point point = JUtil.vectorAdd(pacTile, JUtil.getVector(potentialDir));
-				if(ghostEndPoints.contains(point)){
+				if(dangerousPoints.contains(point)){
 					potentialDirs.remove(potentialDir);
 				}
 			}

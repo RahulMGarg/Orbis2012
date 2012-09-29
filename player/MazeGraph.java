@@ -155,10 +155,7 @@ public class MazeGraph {
 	
 	public List<List<Point>> getPathsBelow(Point start, Point goal, int maxLength) {
 		Queue<List<Point>> queue = new LinkedList<List<Point>>();
-		List<Point> potentialDirs = maze.getAccessibleNeighbours(start);
-		for (Point poi : potentialDirs) {
-			queue.add(Lists.newArrayList(poi));
-		}
+		queue.add(Lists.newArrayList(start));
 		return BFSForEnd(goal, queue, maxLength);
 	}
 
@@ -237,7 +234,7 @@ public class MazeGraph {
 		int minSize = Integer.MAX_VALUE;
 		List<Point> shortestPath = new ArrayList<Point>();
 		for (List<Point> path : paths) {
-			if (path.size() < minSize && path.size() < thresholdTiles) {
+			if (path.size() < minSize) {
 				minSize = path.size();
 				shortestPath = path;
 			}
@@ -298,7 +295,7 @@ public class MazeGraph {
 				}
 			}
 		}
-		return new ArrayList<List<Point>>();		
+		return paths;		
 	}
 
 }
