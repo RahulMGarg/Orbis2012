@@ -9,6 +9,7 @@ import org.python.google.common.collect.Lists;
 import com.google.common.collect.Iterables;
 import com.orbischallenge.pacman.api.common.*;
 import com.orbischallenge.pacman.api.java.*;
+import com.sun.org.apache.xalan.internal.xsltc.compiler.sym;
 
 /**
  * The Player class is the parent class of your AI player. It is just like a
@@ -86,7 +87,7 @@ public class PacPlayer implements Player {
 
 	private MoveDir calculateNext(Modes mode, Pac pac, Maze maze,
 			List<Ghost> ghosts) {
-
+		
 		MoveDir direction = null;
 
 		MoveDir[] directions = MoveDir.values();
@@ -96,19 +97,16 @@ public class PacPlayer implements Player {
 
 		switch (mode) {
 		case EXPLORING:
-			if (pac.getPossibleDirs().contains(pac.getDir())) {
-				// TODO: Update to look for dots
-				direction = pac.getDir();
-			} else {
 				direction = dirToClosestDot(pac, pac.getPossibleDirs());
-			}
 			break;
 		case FLEEING:
 			List<MoveDir> potentialDirs = pac.getPossibleDirs();
 			List<Point> ghostEndPoints = Lists.newArrayList();
 			for (Ghost ghost : ghosts) {
 				List<Point> path = graph.getShortestPath(ghost.getTile(), pac.getTile(), THRESHOLD_TILES);
-				ghostEndPoints.add(path.get(path.size() - 1));
+				if(!path.isEmpty()){
+					ghostEndPoints.add(path.get(path.size() - 1));
+				}
 			}
 			for (MoveDir potentialDir : pac.getPossibleDirs()) {
 				Point point = JUtil.vectorAdd(pacTile, JUtil.getVector(potentialDir));

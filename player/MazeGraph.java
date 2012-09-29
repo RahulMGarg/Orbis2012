@@ -151,6 +151,16 @@ public class MazeGraph {
 		}
 		return paths;
 	}
+	
+	
+	public List<List<Point>> getPathsBelow(Point start, Point goal, int maxLength) {
+		Queue<List<Point>> queue = new LinkedList<List<Point>>();
+		List<Point> potentialDirs = maze.getAccessibleNeighbours(start);
+		for (Point poi : potentialDirs) {
+			queue.add(Lists.newArrayList(poi));
+		}
+		return BFSForEnd(goal, queue, maxLength);
+	}
 
 	/**
 	 * Recursive helper method for graph search starting from a node
@@ -223,11 +233,11 @@ public class MazeGraph {
 
 	public List<Point> getShortestPath(Point ghost, Point you,
 			int thresholdTiles) {
-		List<List<Point>> paths = getPaths(ghost, you, thresholdTiles);
+		List<List<Point>> paths = getPathsBelow(ghost, you, thresholdTiles);
 		int minSize = Integer.MAX_VALUE;
-		List<Point> shortestPath = null;
+		List<Point> shortestPath = new ArrayList<Point>();
 		for (List<Point> path : paths) {
-			if (path.size() < minSize) {
+			if (path.size() < minSize && path.size() < thresholdTiles) {
 				minSize = path.size();
 				shortestPath = path;
 			}
@@ -265,9 +275,30 @@ public class MazeGraph {
 				}
 			}
 		}
-		return new ArrayList<Point>();
-		
-		
+		return new ArrayList<Point>();		
+	}
+	
+	
+	public List<List<Point>> BFSForEnd(Point end, Queue<List<Point>> unvistedPaths, int maxLength){
+		List<List<Point>> paths = new ArrayList<List<Point>>(); 
+		while(unvistedPaths.peek()!=null){
+			List<Point> path = unvistedPaths.poll();			
+			Point point = path.get(path.size() - 1);
+			if(point.equals(end)){
+				paths.add(path);
+			}
+			List<Point> points = maze.getAccessibleNeighbours(point);
+			for (Point poi : points) {
+				if(!path.contains(poi)){
+					List<Point> newPath = Lists.newArrayList(path);
+					newPath.add(poi);
+					if(newPath.size()<=maxLength){
+						unvistedPaths.add(newPath);
+					}
+				}
+			}
+		}
+		return new ArrayList<List<Point>>();		
 	}
 
 }
