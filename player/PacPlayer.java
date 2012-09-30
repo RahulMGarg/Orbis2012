@@ -21,6 +21,10 @@ import com.orbischallenge.pacman.api.java.Player;
  */
 public class PacPlayer implements Player {
 
+	private static final int NUMBER_OF_CHECKS = 5;
+
+	private static final int GHOST_THRESHOLD = 5;
+
 	private static int CHASE_CONSTANT = 32;
 
 	private static int THRESHOLD_TILES = 5;
@@ -92,7 +96,7 @@ public class PacPlayer implements Player {
 		Point pacTile = pac.getTile();
 
 		List<MoveDir> possibleDirs = pac.getPossibleDirs();
-		MoveDir direction = dirToClosestDot(pac, possibleDirs);
+		MoveDir direction = dirToClosestDot(pac.getTile(), possibleDirs, new HashSet<Point>());
 		switch (mode) {
 		case EXPLORING:
 			break;
@@ -114,7 +118,35 @@ public class PacPlayer implements Player {
 				}
 			}
 			if (!potentialDirs.isEmpty()) {
-				direction = dirToClosestDot(pac, potentialDirs);
+				Set<Point> ignoreList = new HashSet<Point>();
+				List<Point> pathOriginal = dirToClosestDotPath(pac.getTile(), potentialDirs, ignoreList);
+				List<Point> path = pathOriginal;
+				int maxAway = 0;
+				List<Point> bestPath = pathOriginal;
+				for (int i = 0; i < NUMBER_OF_CHECKS; i++) {
+					int sum = 0;
+					for (Ghost ghost : activeGhosts) {
+						Point dot = path.get(path.size() - 1);
+						List<Point> pathForGhost = graph.getShortestPath(
+								ghost.getTile(), dot, GHOST_THRESHOLD);
+						if (!pathForGhost.isEmpty()) {
+							ignoreList.addAll(pathForGhost);
+							List<Point> temp = dirToClosestDotPath(pac.getTile(),
+									potentialDirs, ignoreList);
+							if(!temp.isEmpty()){
+								path = temp;
+							}
+							sum += pathForGhost.size();
+						}else{
+							sum += GHOST_THRESHOLD+1;
+						}
+					}
+					if(sum>=maxAway){
+						maxAway = sum;
+						bestPath = path;
+					}
+				}
+				direction = getDirFromPath(pacTile, bestPath);
 			}
 
 			break;
@@ -147,8 +179,22 @@ public class PacPlayer implements Player {
 		return direction;
 	}
 
-	private MoveDir dirToClosestDot(Pac pac, List<MoveDir> potentialDirs) {
-		return graph.getClosestDot(pac.getTile(), potentialDirs);
+	private List<Point> dirToClosestDotPath(Point tile,
+			List<MoveDir> potentialDirs, Set<Point> ignoreList) {
+		return graph.getClosestDot(tile, potentialDirs, ignoreList);
+	}
+
+	private MoveDir dirToClosestDot(Point point, List<MoveDir> potentialDirs, Set<Point> ignoreList) {
+		List<Point> path = graph.getClosestDot(point, potentialDirs, ignoreList);
+		return getDirFromPath(point, path);
+	}
+
+	private MoveDir getDirFromPath(Point point, List<Point> path) {
+		if (!path.isEmpty()) {
+			return JUtil.getMoveDir(JUtil.vectorSub(path.get(0), point));
+		} else {
+			throw new RuntimeException();
+		}
 	}
 
 	/**

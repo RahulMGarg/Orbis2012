@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import com.orbischallenge.pacman.api.common.MazeItem;
 import com.orbischallenge.pacman.api.common.MoveDir;
@@ -235,9 +236,9 @@ public class MazeGraph {
 		return MoveDirList;
 	}
 
-	public List<Point> getShortestPath(Point ghost, Point you,
+	public List<Point> getShortestPath(Point start, Point dest,
 			int thresholdTiles) {
-		List<List<Point>> paths = getPathsBelow(ghost, you, thresholdTiles);
+		List<List<Point>> paths = getPathsBelow(start, dest, thresholdTiles);
 		int minSize = Integer.MAX_VALUE;
 		List<Point> shortestPath = new ArrayList<Point>();
 		for (List<Point> path : paths) {
@@ -249,7 +250,7 @@ public class MazeGraph {
 		return shortestPath;
 	}
 
-	public MoveDir getClosestDot(Point p, List<MoveDir> potentialDirs) {
+	public List<Point> getClosestDot(Point p, List<MoveDir> potentialDirs, Set<Point> ignoreList) {
 		Queue<List<Point>> queue = new LinkedList<List<Point>>();
 		for (MoveDir dir : potentialDirs) {
 			Point point = JUtil.vectorAdd(p, JUtil.getVector(dir));
@@ -257,26 +258,21 @@ public class MazeGraph {
 			list.add(point);
 			queue.add(list);
 		}
-		List<Point> path = BFSForMazeItem(MazeItem.DOT, queue);
-		if (!path.isEmpty()) {
-			return JUtil.getMoveDir(JUtil.vectorSub(path.get(0), p));
-		} else {
-			throw new RuntimeException();
-		}
+		return BFSForMazeItem(Arrays.asList(new MazeItem[] {MazeItem.DOT, MazeItem.POWER_DOT}), queue, ignoreList);
 	}
 	
 	
 
-	public List<Point> BFSForMazeItem(MazeItem item, Queue<List<Point>> unvistedPaths){
+	public List<Point> BFSForMazeItem(List<MazeItem> items, Queue<List<Point>> unvistedPaths,  Set<Point> ignoreList){
 		while(unvistedPaths.peek()!=null){
 			List<Point> path = unvistedPaths.poll();			
 			Point point = path.get(path.size() - 1);
-			if(maze.getTileItem(point).equals(item)){
+			if(items.contains(maze.getTileItem(point))) {
 				return path;
 			}			
 			List<Point> points = getAccessiblePoints(point, path);
 			for (Point poi : points) {
-				if(!path.contains(poi)){
+				if(!path.contains(poi) && !ignoreList.contains(poi)){
 					List<Point> newPath = new ArrayList<Point>();
 					newPath.addAll(path);
 					newPath.add(poi);
