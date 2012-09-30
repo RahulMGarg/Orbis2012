@@ -27,6 +27,8 @@ public class MazeGraph {
 	private Maze maze;
 
 	private Map<Point, Map<Point, List<Point>>> graph;
+	
+	private List<Point> warpPoints;
 
 	public MazeGraph(Maze maze) {
 		this.maze = maze;
@@ -63,7 +65,13 @@ public class MazeGraph {
 					// Put in this node and its connected node->path maps
 					graph.put(node, connected);
 				}
+				if(maze.getTileItem(node).equals(MazeItem.TELEPORT)){
+					warpPoints.add(node);
+				}
 			}
+		}
+		if(warpPoints.size()!=2){
+			throw new RuntimeException("Found more than two warp points");
 		}
 	}
 
