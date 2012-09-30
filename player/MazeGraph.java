@@ -46,6 +46,7 @@ public class MazeGraph {
 	 */
 	private void makeGraph() {
 		this.graph = new HashMap<Point, Map<Point, List<Point>>>();
+		warpPoints = new ArrayList<Point>();
 		for (int j = 0; j < maze.getHeight(); j++) {
 			for (int i = 0; i < maze.getWidth(); i++) {
 				Point node = new Point(i, j);
@@ -270,8 +271,8 @@ public class MazeGraph {
 			Point point = path.get(path.size() - 1);
 			if(maze.getTileItem(point).equals(item)){
 				return path;
-			}
-			List<Point> points = maze.getAccessibleNeighbours(point);
+			}			
+			List<Point> points = getAccessiblePoints(point, path);
 			for (Point poi : points) {
 				if(!path.contains(poi)){
 					List<Point> newPath = Lists.newArrayList(path);
@@ -281,6 +282,19 @@ public class MazeGraph {
 			}
 		}
 		return new ArrayList<Point>();		
+	}
+
+	private List<Point> getAccessiblePoints(Point point, List<Point> path) {
+		List<Point> points = maze.getAccessibleNeighbours(point);
+		if(warpPoints.contains(point)){
+			int i = warpPoints.indexOf(point);
+			if(i==1){
+				points.add(warpPoints.get(0));
+			}else{
+				points.add(warpPoints.get(1));
+			}
+		}
+		return points;
 	}
 	
 	
@@ -292,7 +306,7 @@ public class MazeGraph {
 			if(point.equals(end)){
 				paths.add(path);
 			}
-			List<Point> points = maze.getAccessibleNeighbours(point);
+			List<Point> points = getAccessiblePoints(point, path);
 			for (Point poi : points) {
 				if(!path.contains(poi)){
 					List<Point> newPath = Lists.newArrayList(path);
