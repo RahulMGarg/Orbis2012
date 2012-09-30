@@ -22,7 +22,7 @@ import com.orbischallenge.pacman.api.java.Player;
  */
 public class PacPlayer implements Player {
 
-	private static final int REALLY_SCARED = 3;
+	private static final int REALLY_SCARED = 2;
 
 	private static final int MAX_PATH_TO_LOOK = 20;
 
@@ -32,7 +32,7 @@ public class PacPlayer implements Player {
 
 	private static int THRESHOLD_TILES = 4;
 	
-	private static int HOW_DEEP_IN_INTERSECTION = 5;
+	private static int HOW_DEEP_IN_INTERSECTION = 4;
 
 	private int lives = 3;
 

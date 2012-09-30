@@ -177,16 +177,22 @@ public class MazeGraph {
 	
 	private boolean noGhostInSides(Point point, List<Point> ghostPoints, int insideLength) {
 		boolean ghostsNotThere = true;
+		int numberOfIntersections = 0;
 		for (Point point2 : maze.getAccessibleNeighbours(point)) {
 			MoveDir dir = JUtil.getMoveDir(JUtil.vectorSub(point2, point));
-			int i = 0;
+			int i = 0;			
 			Point newPoint = JUtil.vectorAdd(point, JUtil.getVector(dir));
 			while(!maze.isCorner(newPoint) && i <insideLength){
 				if(maze.isAccessible(newPoint) && ghostPoints.contains(newPoint)){
 					ghostsNotThere = false;
+				}else if(maze.isAccessible(newPoint) && (maze.isIntersection(newPoint))){
+					numberOfIntersections++;
 				}
 				i++;
 			}
+		}
+		if(numberOfIntersections<2){
+			ghostsNotThere = false;
 		}
 		return ghostsNotThere;
 	}
