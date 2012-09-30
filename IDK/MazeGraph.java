@@ -158,7 +158,39 @@ public class MazeGraph {
 		return paths;
 	}
 	
+	public int getNumberOfIntersectionsBeforeGhost(Point start, MoveDir dir, List<Point> ghostPoints, int insideLength) {
+		Point point = start;
+		int numOfIntersections = 0;
+		while(!maze.isCorner(point)){
+			point = JUtil.vectorAdd(point, JUtil.getVector(dir));
+			if(maze.isAccessible(point) && !ghostPoints.contains(point) && noGhostInSides(point, ghostPoints, insideLength)){
+				if(maze.isIntersection(point) || maze.isCorner(point)){
+					numOfIntersections++;
+				}
+			}else{
+				break;
+			}
+		}
+		return numOfIntersections;
+	}
 	
+	
+	private boolean noGhostInSides(Point point, List<Point> ghostPoints, int insideLength) {
+		boolean ghostsNotThere = true;
+		for (Point point2 : maze.getAccessibleNeighbours(point)) {
+			MoveDir dir = JUtil.getMoveDir(JUtil.vectorSub(point2, point));
+			int i = 0;
+			Point newPoint = JUtil.vectorAdd(point, JUtil.getVector(dir));
+			while(!maze.isCorner(newPoint) && i <insideLength){
+				if(maze.isAccessible(newPoint) && ghostPoints.contains(newPoint)){
+					ghostsNotThere = false;
+				}
+				i++;
+			}
+		}
+		return ghostsNotThere;
+	}
+
 	public List<List<Point>> getPathsBelow(Point start, Point goal, int maxLength) {
 		Queue<List<Point>> queue = new LinkedList<List<Point>>();
 		List<Point> list = new ArrayList<Point>();
@@ -235,6 +267,8 @@ public class MazeGraph {
 		}
 		return MoveDirList;
 	}
+	
+	
 
 	public List<Point> getShortestPath(Point start, Point dest,
 			int thresholdTiles) {
@@ -250,7 +284,7 @@ public class MazeGraph {
 		return shortestPath;
 	}
 
-	public List<Point> getClosestDot(Point p, List<MoveDir> potentialDirs, Set<Point> ignoreList) {
+	public List<Point> getClosestDot(Point p, List<MoveDir> potentialDirs, Set<Point> ignoreList, int maxLength) {
 		Queue<List<Point>> queue = new LinkedList<List<Point>>();
 		for (MoveDir dir : potentialDirs) {
 			Point point = JUtil.vectorAdd(p, JUtil.getVector(dir));
@@ -258,12 +292,12 @@ public class MazeGraph {
 			list.add(point);
 			queue.add(list);
 		}
-		return BFSForMazeItem(Arrays.asList(new MazeItem[] {MazeItem.DOT, MazeItem.POWER_DOT}), queue, ignoreList);
+		return BFSForMazeItem(Arrays.asList(new MazeItem[] {MazeItem.DOT, MazeItem.POWER_DOT}), queue, ignoreList, maxLength);
 	}
 	
 	
 
-	public List<Point> BFSForMazeItem(List<MazeItem> items, Queue<List<Point>> unvistedPaths,  Set<Point> ignoreList){
+	public List<Point> BFSForMazeItem(List<MazeItem> items, Queue<List<Point>> unvistedPaths,  Set<Point> ignoreList, int maxLength){
 		while(unvistedPaths.peek()!=null){
 			List<Point> path = unvistedPaths.poll();			
 			Point point = path.get(path.size() - 1);
@@ -276,7 +310,9 @@ public class MazeGraph {
 					List<Point> newPath = new ArrayList<Point>();
 					newPath.addAll(path);
 					newPath.add(poi);
-					unvistedPaths.add(newPath);
+					if(newPath.size()<=maxLength){
+						unvistedPaths.add(newPath);
+					}
 				}
 			}
 		}
