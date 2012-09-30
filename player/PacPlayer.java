@@ -1,16 +1,17 @@
 import java.awt.Point;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.orbischallenge.pacman.api.common.*;
-import com.orbischallenge.pacman.api.java.*;
-import com.sun.org.apache.xalan.internal.xsltc.compiler.sym;
+import com.orbischallenge.pacman.api.common.GhostState;
+import com.orbischallenge.pacman.api.common.MoveDir;
+import com.orbischallenge.pacman.api.java.Ghost;
+import com.orbischallenge.pacman.api.java.JUtil;
+import com.orbischallenge.pacman.api.java.Maze;
+import com.orbischallenge.pacman.api.java.Pac;
+import com.orbischallenge.pacman.api.java.Player;
 
 /**
  * The Player class is the parent class of your AI player. It is just like a
@@ -20,9 +21,9 @@ import com.sun.org.apache.xalan.internal.xsltc.compiler.sym;
  */
 public class PacPlayer implements Player {
 
-	private static final int CHASE_CONSTANT = 32;
+	private static int CHASE_CONSTANT = 32;
 
-	private static final int THRESHOLD_TILES = 5;
+	private static int THRESHOLD_TILES = 5;
 
 	private int lives = 3;
 
@@ -32,19 +33,14 @@ public class PacPlayer implements Player {
 		EXPLORING, HUNTING, FLEEING
 	}
 
-	private final static double THRESHOLD_PIXELS = THRESHOLD_TILES * 16;
-
-	private Map<GhostName, Integer> distanceToGhost = new HashMap<GhostName, Integer>();
+	private static double THRESHOLD_PIXELS = THRESHOLD_TILES * 16;
 
 	enum Quadrants {
 		UPPER_LEFT, UPPER_RIGHT, LOWER_RIGHT, LOWER_LEFT
 	}
 
 	// States where touching a ghost is bad
-	private final static List<GhostState> dangerousStates = Lists.newArrayList(
-			GhostState.CHASER, GhostState.SCATTER);
-
-	private Map<MazeItem, Integer> distanceToDots = new HashMap<MazeItem, Integer>();
+	private final static List<GhostState> dangerousStates = Arrays.asList(new GhostState[] {GhostState.CHASER, GhostState.SCATTER});
 
 	/**
 	 * This is method decides Pacman�s moving direction in the next frame (See
@@ -65,12 +61,8 @@ public class PacPlayer implements Player {
 	 */
 	public MoveDir calculateDirection(Maze maze, Ghost[] ghosts, Pac pac,
 			int score) {
-		// long time = System.currentTimeMillis();
-		MoveDir[] directions = MoveDir.values();
 
 		Modes mode = Modes.EXPLORING;
-		// Get the current tile of Pacman
-		Point pacTile = pac.getTile();
 		List<Ghost> closeActiveGhosts = new ArrayList<Ghost>();
 		List<Ghost> closeBlinkingGhosts = new ArrayList<Ghost>();
 		for (int i = 0; i < ghosts.length; i++) {
@@ -90,9 +82,6 @@ public class PacPlayer implements Player {
 		}
 
 		MoveDir dir = calculateNext(mode, pac, maze, closeActiveGhosts, closeBlinkingGhosts);
-		// Iterate through the four directions
-		// System.out.println(System.currentTimeMillis() - time +
-		// " The mode is: " + mode);
 		return dir;
 	}
 
@@ -152,6 +141,9 @@ public class PacPlayer implements Player {
 		default:
 			throw new IllegalStateException();
 		}
+		if (graph.warpPoints.contains(pacTile)) {
+			direction = pac.getDir();
+		}
 		return direction;
 	}
 
@@ -175,6 +167,9 @@ public class PacPlayer implements Player {
 	 */
 	public void onLevelStart(Maze maze, Ghost[] ghosts, Pac pac, int score) {
 		System.out.println("Java player start new level!");
+		CHASE_CONSTANT = Integer.valueOf(System.getProperty("CHASE_CONSTANT", ((Integer)THRESHOLD_TILES).toString()));
+		THRESHOLD_TILES = Integer.valueOf(System.getProperty("THRESHOLD_TILES", ((Integer)THRESHOLD_TILES).toString()));
+		THRESHOLD_PIXELS = THRESHOLD_TILES*16;
 		this.graph = new MazeGraph(maze);
 	}
 

@@ -5,16 +5,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Queue;
-import java.util.Stack;
 
-import org.python.google.common.collect.Iterables;
-
-import com.google.common.collect.Lists;
-import com.orbischallenge.pacman.api.common.*;
-import com.orbischallenge.pacman.api.java.*;
-import com.sun.jmx.remote.internal.ArrayQueue;
+import com.orbischallenge.pacman.api.common.MazeItem;
+import com.orbischallenge.pacman.api.common.MoveDir;
+import com.orbischallenge.pacman.api.java.JUtil;
+import com.orbischallenge.pacman.api.java.Maze;
 
 /**
  * A graph representation of the maze. Important: the methods are not optimized
@@ -28,7 +24,7 @@ public class MazeGraph {
 
 	private Map<Point, Map<Point, List<Point>>> graph;
 	
-	private List<Point> warpPoints;
+	public List<Point> warpPoints;
 
 	public MazeGraph(Maze maze) {
 		this.maze = maze;
@@ -164,7 +160,9 @@ public class MazeGraph {
 	
 	public List<List<Point>> getPathsBelow(Point start, Point goal, int maxLength) {
 		Queue<List<Point>> queue = new LinkedList<List<Point>>();
-		queue.add(Lists.newArrayList(start));
+		List<Point> list = new ArrayList<Point>();
+		list.add(start);
+		queue.add(list);
 		return BFSForEnd(goal, queue, maxLength);
 	}
 
@@ -255,7 +253,9 @@ public class MazeGraph {
 		Queue<List<Point>> queue = new LinkedList<List<Point>>();
 		for (MoveDir dir : potentialDirs) {
 			Point point = JUtil.vectorAdd(p, JUtil.getVector(dir));
-			queue.add(Lists.newArrayList(point));
+			List<Point> list = new ArrayList<Point>();
+			list.add(point);
+			queue.add(list);
 		}
 		List<Point> path = BFSForMazeItem(MazeItem.DOT, queue);
 		if (!path.isEmpty()) {
@@ -275,7 +275,8 @@ public class MazeGraph {
 			List<Point> points = getAccessiblePoints(point, path);
 			for (Point poi : points) {
 				if(!path.contains(poi)){
-					List<Point> newPath = Lists.newArrayList(path);
+					List<Point> newPath = new ArrayList<Point>();
+					newPath.addAll(path);
 					newPath.add(poi);
 					unvistedPaths.add(newPath);
 				}
@@ -309,7 +310,8 @@ public class MazeGraph {
 			List<Point> points = getAccessiblePoints(point, path);
 			for (Point poi : points) {
 				if(!path.contains(poi)){
-					List<Point> newPath = Lists.newArrayList(path);
+					List<Point> newPath = new ArrayList<Point>();
+					newPath.addAll(path);
 					newPath.add(poi);
 					if(newPath.size()<=maxLength){
 						unvistedPaths.add(newPath);
