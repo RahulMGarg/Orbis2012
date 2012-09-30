@@ -167,9 +167,11 @@ public class PacPlayer implements Player {
 	 */
 	public void onLevelStart(Maze maze, Ghost[] ghosts, Pac pac, int score) {
 		System.out.println("Java player start new level!");
-		CHASE_CONSTANT = Integer.valueOf(System.getProperty("CHASE_CONSTANT", ((Integer)THRESHOLD_TILES).toString()));
+		/*CHASE_CONSTANT = Integer.valueOf(System.getProperty("CHASE_CONSTANT", ((Integer)THRESHOLD_TILES).toString()));
+		System.out.println("Chase Constant " + CHASE_CONSTANT);
 		THRESHOLD_TILES = Integer.valueOf(System.getProperty("THRESHOLD_TILES", ((Integer)THRESHOLD_TILES).toString()));
-		THRESHOLD_PIXELS = THRESHOLD_TILES*16;
+		System.out.println("Threshold Tiles " + THRESHOLD_TILES);
+		THRESHOLD_PIXELS = THRESHOLD_TILES*16;*/
 		this.graph = new MazeGraph(maze);
 	}
 

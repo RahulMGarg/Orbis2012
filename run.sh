@@ -12,4 +12,4 @@ SRC_PATH="$DIR_PATH/player/PacPlayer.java"
 javac -classpath $BUILD_CLASS_PATH $SRC_PATH || { echo "Compilation failed for AI player"; exit 1; }
 
 # Run
-java -jar $JAR_PATH $CLASS_PATH PacPlayer $@
+java -DCHASE_CONSTANT=$1 -DTHRESHOLD_TILES=$2 -jar $JAR_PATH $CLASS_PATH PacPlayer -ai -speed 30 -nonui

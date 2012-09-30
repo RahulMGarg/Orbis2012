@@ -264,6 +264,8 @@ public class MazeGraph {
 			throw new RuntimeException();
 		}
 	}
+	
+	
 
 	public List<Point> BFSForMazeItem(MazeItem item, Queue<List<Point>> unvistedPaths){
 		while(unvistedPaths.peek()!=null){
