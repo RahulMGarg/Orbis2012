@@ -20,6 +20,8 @@ import com.sun.org.apache.xalan.internal.xsltc.compiler.sym;
  */
 public class PacPlayer implements Player {
 
+	private static final int CHASE_CONSTANT = 32;
+
 	private static final int THRESHOLD_TILES = 5;
 
 	private int lives = 3;
@@ -63,67 +65,89 @@ public class PacPlayer implements Player {
 	 */
 	public MoveDir calculateDirection(Maze maze, Ghost[] ghosts, Pac pac,
 			int score) {
+		// long time = System.currentTimeMillis();
 		MoveDir[] directions = MoveDir.values();
 
 		Modes mode = Modes.EXPLORING;
 		// Get the current tile of Pacman
 		Point pacTile = pac.getTile();
-		List<Ghost> closeGhosts = new ArrayList<Ghost>();
+		List<Ghost> closeActiveGhosts = new ArrayList<Ghost>();
+		List<Ghost> closeBlinkingGhosts = new ArrayList<Ghost>();
 		for (int i = 0; i < ghosts.length; i++) {
 			if (ghosts[i].distanceToPac(pac) < THRESHOLD_PIXELS
 					&& (dangerousStates.contains(ghosts[i].getState()))) {
-				closeGhosts.add(ghosts[i]);
+				closeActiveGhosts.add(ghosts[i]);
+			} else if (ghosts[i].distanceToPac(pac) < THRESHOLD_PIXELS
+					&& ghosts[i].getState().equals(GhostState.FRIGHTEN)) {
+				closeBlinkingGhosts.add(ghosts[i]);
 			}
 		}
 
-		if (!closeGhosts.isEmpty()) {
+		if (!closeActiveGhosts.isEmpty()) {
 			mode = Modes.FLEEING;
+		} else if (!closeBlinkingGhosts.isEmpty()) {
+			mode = Modes.HUNTING;
 		}
 
-		MoveDir dir = calculateNext(mode, pac, maze, closeGhosts);
+		MoveDir dir = calculateNext(mode, pac, maze, closeActiveGhosts, closeBlinkingGhosts);
 		// Iterate through the four directions
-
+		// System.out.println(System.currentTimeMillis() - time +
+		// " The mode is: " + mode);
 		return dir;
 	}
 
 	private MoveDir calculateNext(Modes mode, Pac pac, Maze maze,
-			List<Ghost> ghosts) {
-		
-		MoveDir direction = null;
-
-		MoveDir[] directions = MoveDir.values();
+			List<Ghost> activeGhosts, List<Ghost> blinkingGhosts) {
 
 		// Get the current tile of Pacman
 		Point pacTile = pac.getTile();
 
+		List<MoveDir> possibleDirs = pac.getPossibleDirs();
+		MoveDir direction = dirToClosestDot(pac, possibleDirs);
 		switch (mode) {
 		case EXPLORING:
-				direction = dirToClosestDot(pac, pac.getPossibleDirs());
 			break;
 		case FLEEING:
 			List<MoveDir> potentialDirs = pac.getPossibleDirs();
 			Set<Point> dangerousPoints = new HashSet<Point>();
-			for (Ghost ghost : ghosts) {
-				List<Point> path = graph.getShortestPath(ghost.getTile(), pac.getTile(), THRESHOLD_TILES);
-				if(!path.isEmpty()){
+			for (Ghost ghost : activeGhosts) {
+				List<Point> path = graph.getShortestPath(ghost.getTile(),
+						pac.getTile(), THRESHOLD_TILES);
+				if (!path.isEmpty()) {
 					dangerousPoints.addAll(path);
 				}
 			}
-			for (MoveDir potentialDir : pac.getPossibleDirs()) {
-				Point point = JUtil.vectorAdd(pacTile, JUtil.getVector(potentialDir));
-				if(dangerousPoints.contains(point)){
+			for (MoveDir potentialDir : possibleDirs) {
+				Point point = JUtil.vectorAdd(pacTile,
+						JUtil.getVector(potentialDir));
+				if (dangerousPoints.contains(point)) {
 					potentialDirs.remove(potentialDir);
 				}
 			}
-			if(potentialDirs.isEmpty()){
-				//TODO: Go away from closest
-				direction = dirToClosestDot(pac, pac.getPossibleDirs());
-			}else{
+			if (!potentialDirs.isEmpty()) {
 				direction = dirToClosestDot(pac, potentialDirs);
 			}
-			
+
 			break;
 		case HUNTING:
+			List<Point> closestGhost = new ArrayList<Point>();
+			int minSize = Integer.MAX_VALUE;
+			for (Ghost ghost : blinkingGhosts) {
+				List<Point> path = graph.getShortestPath(pac.getTile(),
+						ghost.getTile(), ghost.framesTillRecover()/CHASE_CONSTANT);
+				if (!path.isEmpty() && path.size()<minSize) {
+					closestGhost = path;
+					minSize = path.size();
+				}
+			}
+			if(!closestGhost.isEmpty()){
+				if(closestGhost.size()>1){
+					direction = JUtil.getMoveDir(JUtil.vectorSub(closestGhost.get(1), pacTile));
+				}else{
+					direction = pac.getDir();
+				}
+				
+			}
 			break;
 		default:
 			throw new IllegalStateException();
