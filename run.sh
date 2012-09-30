@@ -4,7 +4,7 @@ set -o errexit
 
 DIR_PATH=`pwd`
 JAR_PATH="$DIR_PATH/pacman-java.jar"
-CLASS_PATH="$DIR_PATH/player"
+CLASS_PATH="$DIR_PATH/IDK"
 BUILD_CLASS_PATH="$JAR_PATH:$CLASS_PATH"
 SRC_PATH="$DIR_PATH/IDK/PacPlayer.java"
 
